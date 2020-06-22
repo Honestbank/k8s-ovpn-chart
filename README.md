@@ -1,5 +1,3 @@
-[![](https://img.shields.io/static/v1.svg?label=Deploy%20on&message=DigitalOcean&color=blue)](https://www.digitalocean.com/products/kubernetes/?refcode=fef9487dad1e&utm_campaign=Referral_Invite&utm_medium=Referral_Program&utm_source=CopyPaste)
-
 # Private Kubernetes OpenVPN Helm chart
 
 TL;DR: This Chart is intended for deploying a private VPN server **without access to other Pods in the cluster**.
@@ -10,7 +8,9 @@ Think of it as roll-your-own Nord/Express VPN in your Kubernetes cluster.
 ```bash
 $ helm repo add k8s-ovpn https://raw.githubusercontent.com/suda/k8s-ovpn-chart/master
 $ helm repo update
-$ helm install k8s-ovpn/k8s-ovpn-chart
+# To use UDP use `--set service.protocol=UDP` otherwise below defaults to TCP
+$ helm install k8s-ovpn/k8s-ovpn-chart --set service.type=LoadBalancer \
+    --set service.protocol=UDP
 ```
 
 ### Generate necessary secrets
@@ -19,12 +19,15 @@ $ helm install k8s-ovpn/k8s-ovpn-chart
 $ git clone https://github.com/suda/k8s-ovpn-chart.git
 $ cd k8s-ovpn-chart
 $ export VPN_HOSTNAME=vpn.example.com
+# If using UDP, make sure to set VPN_PROTOCOL=udp
+$ export VPN_PROTOCOL=udp
+$ export VPN_PORT=1194
 # Generate basic OpenVPN config
 $ ./bin/generate-config
 # Repeat this step for all the clients you need
 $ CLIENT_NAME=my-client ./bin/add-client
 # Set the Kubernetes secrets. Prepend with REPLACE=true to update existing ones
-$ ./bin/set-secrets
+$ REPLACE=true ./bin/set-secrets
 ```
 
 After generating the secrets above, you'll have all the config, certificates **and the keys** on your machine, in the `ovpn0` directory. You need it to add more clients later but also isn't very secure to keep those keys just laying around on your machine.
